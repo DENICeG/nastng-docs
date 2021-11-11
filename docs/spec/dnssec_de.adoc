@@ -1,0 +1,483 @@
+=== Technischer Hintergrund
+
+Um für die Validierung bei DNSSEC eine Vertrauenskette (chain of trust) aufbauen zu 
+können, sieht das DNSSEC-Protokoll vor, in der delegierenden Zone einen Hinweis auf den 
+oder die Schlüssel der delegierten Zone zu hinterlegen. Die Vertrauenskette folgt damit 
+dem Delegationspfad.
+
+Der entscheidende Schlüssel ist der Key Signing Key der delegierten Zone, der in der 
+Regel als Secure Entry Point (SEP) markiert ist. Diese Information liegt in einem DNSKEY-RR 
+in der delegierten Zone vor und ist dort (mindestens) von diesem DNSKEY selbst 
+unterschrieben. In der delegierenden Zone wird diese Information aus Platzgründen nicht 
+exakt wiederholt. Statt des eigentlichen Schlüssels wird dort ein entsprechender 
+Fingerprint in einem DS-RR (Delegation Signer) abgelegt.
+
+Für die Provisionierung des Schlüsselmaterials wird der DNSKEY-RR verwendet.  
+Bis zu fünf DNSKEY-RRs können pro Domain registriert werden. Im Rahmen der 
+Zonengenerierung werden die entsprechenden DS-Records7 erzeugt (derzeit genau ein 
+DS-RR pro mitgeteiltem Trust Anchor), signiert und mit der Zone verteilt. 
+
+=== Aufbau des Dnskey-RR
+
+Jeder Dnskey-RR wird als Wire-Text-Format im Auftrag übergeben (siehe https://www.ietf.org/rfc/rfc4034.txt[RFC4034]).
+Der Aufbau ist wie folgt:
+
+
+                    1 1 1 1 1 1 1 1 1 1 2 2 2 2 2 2 2 2 2 2 3 3 
+0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|              Flags            |    Protocol   |   Algorithm   |
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+ 
+/                                                               /
+/                          Public Key                           /
+/                                                               /
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+
+Unter den Flags findet sich je ein Eintrag für das Feld Zone Key und Secure Entry Point.
+Im Feld Algorithm wird der verwendete Public-Key-Algorithmus spezifiziert, der dann auch
+die innere Struktur und die Größe der eigentlichen Schlüsseldaten bestimmt. Zusätzlich wird
+dieses Feld genutzt, um mit Hilfe von Alias-Mechanismen die Verwendung von NSEC3 zu signalisieren.
+
+=== DNSKEY Typen & Signierung
+
+Mit der erstmaligen Einführung des DS-RR in https://www.ietf.org/rfc/rfc3658.txt[RFC3658] wurde
+auch die Unterscheidung des Zone Signing Keys (ZSK) und des Key Signing Keys (KSK) begonnen. Während der 
+erste die eigentlichen Daten (RRSets) in der Zone signiert, dient der zweite, als der KSK, ausschließlich
+zur Authentisierung des ZSK. Mit dieser Trennung wurde den unterschiedlichen Anforderungen an die Schlüssel
+Rechnung getragen. Eine Änderung des KSK erfordert eine Interaktion mit der delegierenden Zone, sollte 
+darum moderat häufig vorkommen und erfordert somit einen längerlebigen (daraus folgt meist: längeren)
+Schlüssel. Der ZSK kann einfacher gewechselt werden und wird darum in der Regel kürzer gewählt, was zumindest
+für das RSA-Verfahren zu kürzeren Signaturen und damit zu kleineren Zonendateien und zu kleineren Antwortpaketen
+führt. Hinweise zu Schlüssellängen und -wechseln finden sich in unter anderem in https://www.ietf.org/rfc/rfc4641.txt[RFC4641]. 
+Während die Trennung eine Erleichterung hinsichtlich der Parameterwahl darstellt, erhöht sie
+andererseits die Komplexität ds Protokolls. Allerdings ist sie nicht zwingend. Die Verwendung nur
+eines Schlüssels anstelle eines KSK/ZSK-Paares unter Inkaufnahme der oben beschriebenen Nachteile
+ist protokollkonform und kommt in der Praxis gelegentlich vor. Theoretisch wäre es auch möglich,
+weitere Indirektionen in die Schlüsselbeziehungen einzuführen. Da allerdings eine Signatur ein RRSet
+immer vollständig erfasst, muss jede Signatur über dem DNSKEY-RRSet zwangsläufig alle dort enthaltenen
+Schlüssel authentisieren. Es reicht also, die Fälle ZSK+KSK und ZSK=KSK zu berücksichtigen.
+
+=== DNSKEY-RR Sichtbarkeit
+
+Ein im Auftrag übergebener DNSKEY-RR ist sichtbar, wenn er im DNSKEY-RRSet der delegierten Zone
+enthalten ist.
+
+=== Validierungskette und Konzept
+
+Im Betrieb von DNSSEC ist die Validierung der _Proof of Possession_ und der _Chain of Trust_
+von maßgebender Bedeutung. Diese sind wiefolgt definiert:
+
+_Proof of Possession:_ Beinhaltet die Gültigkeitsprüfung der Signatur des DNSKEY-RRSet der 
+delegierten Zone. Der im Auftrag übergebene KSK wird dazu gewöhnlich verwendet. Diese Überprüfung
+garantiert die Integrität und Authentizität des DNSKEY-RRSet der Zone.
+
+_Chain of Trust:_ Beinhaltet die Gültigkeitsprüfung der Signatur des SOA-RR der delegierten Zone.
+Der im Auftrag übergebene oder im DNSKEY-RRSet enthaltene ZSK wird dazu gewöhnlich verwendet. Diese Überprüfung
+dient zur Sicherstellung und Aufbau einer "Vertrauenskette" innerhalb der Zonen-Delegation.
+Damit auch nicht registrierte Domains überprüft werden können, erfolgt diese Validierung nur in der
+delegierten Zone. Eine fortlaufende Validierung der Vertrauenskette auf höheren Zonen-Ebenen
+erfolgt nicht.
+
+Basierend auf diesem Konzept ergeben sich die nachfolgenden <<Anforderungen>>.
+
+=== Anforderungen
+
+Zu Beginn wird das im Auftrag übergebene Schlüsselmaterial einer mehrstufigen Prüfung unterzogen
+(z.B. Flags, Algorithmen, Public Key Feld etc.), im folgenden dann Tests unter Einbeziehung der im
+DNS abrufbaren Information angestellt.
+
+[[req:dnskey-parameters,DNSKEY: Parameter]]
+==== DNSKEY: Parameter
+Ein im Auftrag übergebener Schlüssel *MUSS** eindeutig sein, **MUSS** sich also in 
+mindestens einem Feld von den restlichen unterscheiden. Die maximale Anzahl an Schlüsseln
+im Auftrag **MUSS** &le; 5 sein. Andernfalls erfolgt die Ausgabe eines entsprechenden **ERROR**.
+
+**ERROR**:
+[cols="1,6"]
+|===
+|Code |Message
+
+| 208
+| Duplicate DNSKEY RR
+
+| 210
+| At most 5 DNSKEY RR allowed
+|===
+
+==== DNSKEY: Flags
+Im Feld Flags dürfen ausschließlich Bits gesetzt sein, die in der IANA-Registry als 
+zugewiesen markiert sind. Das Feld wird ausschließlich als numerischer Wert (0 - 65535) übergeben.
+
+[[req:dnskey-flags-zone-bit,ZONE Bit]]
+===== ZONE Bit
+Bit 7 (ZONE) **MUSS** gesetzt sein. Ssonst Ausgabe von **ERROR**. 
+
+**ERROR**:
+[cols="1,6"]
+|===
+|Code |Message
+
+| 200
+| DNSKEY RR ZONE flag (bit 7) must be set
+|===
+
+**Erläuterung:**
+Vorgeschrieben in https://www.ietf.org/rfc/rfc4034.txt[RFC4034].
+
+[[req:dnskey-flags-revoke-bit,REVOKE Bit]]
+===== REVOKE Bit
+Bit 8 (REVOKE) **MUSS** ge-cleared sein. Sonst Ausgabe von **ERROR**.
+
+**ERROR**:
+[cols="1,6"]
+|===
+|Code |Message
+
+| 201
+| DNSKEY RR REVOKE flag (bit 8) must not be set
+|===
+
+**Erläuterung:**
+Folgt aus https://www.ietf.org/rfc/rfc5011.txt[RFC5011]. Ein Zurückgerufener Schlüssel kann nicht als Trust 
+Anchor fungieren. 
+
+[[req:dnskey-flags-sep-bit,SEP Bit]]
+===== SEP Bit
+Bit 15 (SEP) **SOLL** gesetzt sein. Sonst Ausgabe von **WARNING**.
+
+**WARNING**:
+[cols="1,6"]
+|===
+|Code |Message
+
+| 202
+| DNSKEY RR SEP flag (bit 15) should be set
+|===
+
+**Erläuterung:**
+Dieses Feld soll den KSK im DNSKEY-RRSet identifizieren. Es entspricht guter Praxis, es 
+für KSKs bzw. Trust Anchor zu setzen, auch wenn Validatoren es nicht auswerten sollen.
+
+[[req:dnskey-flags-values,Erlaubte Werte]]
+===== Erlaubte Werte
+Gemäß <<ZONE Bit>>, <<REVOKE Bit>> und <<SEP Bit>> **MUSS** also entweder 256 (ZONE) und 257 (ZONE, SEP) 
+als möglicher Wert gewählt werden. Alle anderen Werte implizieren einen **ERROR**.
+
+**ERROR**:
+[cols="1,6"]
+|===
+|Code |Message
+
+| 221
+| Unknown flags in DNSKEY RR are set
+|===
+
+==== DNSKEY: Protocol
+
+Das Feld Protocol **MUSS** den Wert "3" haben. Dieser Wert ist in https://www.ietf.org/rfc/rfc2308.txt[RFC4034]
+zwingend vorgeschrieben und wird somit statisch angenommen. Es erfolgt daher keine Issue-Ausgabe bei Verstoß.  
+
+[[req:dnskey-algo,DNSKEY: Algorithm]]
+==== DNSKEY: Algorithm
+Im Feld Algorithm *MUSS* ein Wert vorkommen, der in der folgenden Untermenge aus der
+https://www.iana.org/assignments/dns-sec-alg-numbers/dns-sec-alg-numbers.xhtml[IANA-Registry]
+enthalten ist.
+
+Unterstützte Algorithmen: 3, 5, 6, 7, 8, 10, 12, 13 ,14, 15 and 16
+
+Sonst Ausgabe von **ERROR**.
+
+**ERROR**:
+[cols="1,6"]
+|===
+|Code |Message
+
+| 220
+| DNSKEY RR has invalid algorithm
+|===
+
+**HINWEIS:** Die Algorithmen 3, 5, 7 und 12 sind als _Deprecated_ eigestuft. Der Support wird
+daher in zukünftigen Releases eingestellt werden.
+
+[[req:dnskey,DNSKEY: Public Key]]
+==== DNSKEY: Public Key
+Das Feld Public Key **MUSS** den öffentlichen Schlüssel in Base64-Codierung enthalten.
+Sonst Ausgabe von **ERROR**.
+
+**ERROR**:
+[cols="1,6"]
+|===
+|Code |Message
+
+| 207
+| DNSKEY RR public key must be BASE64 encoded
+|===
+
+Die interne Struktur hängt vom verwendeten Algorithmus ab, so entsprechend auch deren nachfolgende
+Anforderungen: 
+
+===== RSA
+
+Für die RSA basierten Algorithmen 5, 7, 8 und 10 gilt folgendes.
+
+[[req:dnskey-alg-rsa-modulos,Modulos]]
+====== Modulos
+Der Modulos **MUSS** zwischen [512,4096] Bit lang sein. Sonst Ausgabe von **ERROR**.
+
+**ERROR**:
+[cols="1,6"]
+|===
+|Code |Message
+
+| 203
+| DNSKEY RR RSA key modulus length in bits out of range
+|===
+
+[[req:dnskey-alg-rsa-exponent,Exponent]]
+====== Exponent
+Der Exponent *MUSS* &le; 128 Bit lang sein. Sonst Ausgabe von **ERROR**.
+
+**ERROR**:
+[cols="1,6"]
+|===
+|Code |Message
+
+| 204
+| DNSKEY RR RSA public key exponent length in bits must not exceed 128 bits
+|===
+
+**Erläuterung:**
+Die Grenzen folgen aus http://www.ietf.org/rfc/rfc3110.txt[RFC3110].
+
+===== DSA
+
+Für die DSA basierten Algorithmen 3 und 6 gilt folgendes.
+
+[[req:dnskey-alg-dsa-t,T Parameter]]
+====== T Parameter
+Der Parameter T **MUSS** einen Werte zwischen [0,8] annehmen. Sonst 
+Ausgabe von **ERROR**.
+
+**ERROR**:
+[cols="1,6"]
+|===
+|Code |Message
+
+| 205
+| DNSKEY RR DSA public key parameter T out of range
+|===
+
+[[req:dnskey-alg-dsa-length,Bytelänge]]
+====== Bytelänge
+Die Bytelänge **MUSS** 213 + T * 24 entsprechen. Sonst Ausgabe von **ERROR**. 
+
+**ERROR**:
+[cols="1,6"]
+|===
+|Code |Message
+
+| 206
+| DNSKEY RR DSA public key has invalid size
+|===
+
+[[req:dnskey-alg-ecdsa,ECDSA]]
+===== ECDSA
+Die ECDSA Algorithmen 13 und 14 unterscheiden sich wiefolgt:
+
+* In ECDSAP256SHA256 (13) **MUSS** der Schlüssel 512 Bit lang sein. Sonst Ausgabe von **ERROR**.
+* In ECDSAP384SHA384 (14) **MUSS** der Schlüssel 768 Bit lang sein. Sonst Ausgabe von **ERROR**.
+
+**ERROR**:
+[cols="1,6"]
+|===
+|Code |Message
+
+| 226
+| DNSKEY RR ECDSA public key has invalid size
+|===
+
+**Erläuterung:**
+Diese Werte ergeben sich aus http://www.ietf.org/rfc/rfc6605.txt[RFC6605].
+
+[[req:dnskey-alg-gost,GOST]]
+===== GOST
+Der Schlüssel **MUSS** die Länge 512 Bit haben. Sonst Ausgabe von **ERROR**.
+
+**ERROR**:
+[cols="1,6"]
+|===
+|Code |Message
+
+| 227
+| DNSKEY RR GOST public key has invalid size
+|===
+
+**Erläuterung:**
+Dieser Wert ergibt sich aus http://www.ietf.org/rfc/rfc5933.txt[RFC5933].
+
+[[req:dnskey-alg-eddsa,EdDSA]]
+===== EdDSA
+Die EdDSA Algorithmen 15 und 16 unterscheiden sich wiefolgt:
+
+* In ED25519 (15) **MUSS** der Schlüssel 256 Bit lang sein. Sonst Ausgabe von **ERROR**.
+* In ED448 (16) **MUSS** der Schlüssel 456 Bit lang sein. Sonst Ausgabe von **ERROR**.
+
+**ERROR**:
+[cols="1,6"]
+|===
+|Code |Message
+
+| 228
+| DNSKEY RR ED public key has invalid size
+|===
+
+**Erläuterung:**
+Dieser Wert ergibt sich aus http://www.ietf.org/rfc/rfc8080.txt[RFC8080].
+
+==== DNSKEY-RRSet
+
+[[req:dnskey-rrset-status,Status]]
+===== Status
+Das DNSKEY-RRSet **MUSS** an allen autoritativen Servern identisch sein. Sonst Ausgabe von 
+**ERROR**.
+
+**ERROR**:
+[cols="1,6"]
+|===
+|Code |Message
+
+| 211
+| Inconsistent DNSKEY RR in nameserver response
+|===
+
+[[req:dnskey-rrset-visibility,Sichtbarkeit]]
+===== Sichtbarkeit
+Mindestens ein im Auftrag übergebener Schlüssel **MUSS** im DNSKEY-RRSet der delegierten Zone
+<<DNSKEY-RR Sichtbarkeit, SICHTBAR>> sein. Sonst Ausgabe von **ERROR**.
+
+**ERROR**:
+[cols="1,6"]
+|===
+|Code |Message
+
+| 213
+| Did not find any DNSKEY RR from request in all nameserver responses
+|===
+
+Für jeden nicht sichtbaren Schlüssel wird eine **WARNING** erzeugt.
+
+**WARNING**:
+[cols="1,6"]
+|===
+|Code |Message
+
+| 212
+| Did not find DNSKEY RR from request in all nameserver responses
+|===
+
+**Erläuterung:**
+Eventuell im DNSKEY-RRSet zusätzlich vorhandene Schlüssel werden nicht betrachtet.
+Eine Übereinstimmung der von unterschiedlichen Servern bezogenen Signaturen ist die 
+Regelannahme, wird aber nicht ausdrücklich geprüft oder gefordert. Insbesondere dem 
+DSA- und ECDSA-Verfahren wird so ermöglicht, online zu signieren.
+
+[[req:dnssec-proof-of-possession,Validierung Proof of Possession]]
+==== Validierung Proof of Possession
+Mindestens ein sichtbarer im Auftrag übergebener Schlüssel **MUSS** die Signatur
+DNSKEY-RRSet gültig validieren. Sonst Ausgabe von **ERROR**. 
+
+**ERROR**:
+[cols="1,6"]
+|===
+|Code |Message
+
+| 216
+| No visible DNSKEY found signing the DNSKEY RR obtained in response
+|===
+
+**Erläuterung:**
+Diese Anforderung dient der Umsetzung der <<Validierungskette und Konzept, Proof of Possession>>.
+
+[[req:dnssec-chain-of-trust,Validierung Chain of Trust]]
+==== Validierung Chain of Trust
+Zum SOA-RR der delegierten Zone **MUSS** eine aktuell gültige Validierungskette mit 
+mindestens einem sichtbaren im Auftrag übergebenen Schlüssel existieren. Das bedeutet, dass mindestens
+ein Schlüssel aus dem Auftrag oder aus dem DNSKEY-RRSet die Signatur des SOA-RR gültig validiert. Sonst 
+Ausgabe von **ERROR**.
+
+**ERROR**:
+[cols="1,6"]
+|===
+|Code |Message
+
+| 217
+| No visible DNSKEY found in signing directly or indirectly the SOA RR obtained in response
+|===
+
+**Erläuterung:**
+Diese Anforderung enstpricht der <<Validierungskette und Konzept, Chain of Trust>> und
+verhindert Security Lameness. Die Validierung ist auf die delegierte Zone beschränkt damit
+auch unregistrierte Domains beauftragt werden können.
+
+==== Übergreifende Regeln 
+
+Neben den auf die Zonendaten abgestellten Anforderungen ergeben sich durch DNSSEC Anforderungen
+an die autoritativen Server bzw. die sie umgebende Infrastruktur.
+
+[[req:dnssec-cross-edns0,EDNS0 Support]]
+===== EDNS0 Support
+Jeder autoritative Server **MUSS** die DNSSEC Protokoll-Erweiterung EDNS0 unterstützen, somit
+auf Anfragen mit dem DO-Bit signierte, DNSSEC-konforme Antworten liefern. Sonst Ausgabe von **ERROR**. 
+
+**ERROR**:
+[cols="1,6"]
+|===
+|Code |Message
+
+| 218
+| Received invalid answer to a DO-Bit query 
+|===
+
+[[req:dnssec-cross-udp,UDP basiertes EDNS0]]
+===== UDP basiertes EDNS0
+Jeder autoritative Server **SOLL** UDP hinsichtlich der Erweiterung EDNS0 mit ausreichender
+Paketgröße und Vefügbarkeit unterstützen. Andernfalls erfolgt die Ausgabe einer entsprechenden
+**WARNING**. 
+
+**WARNINGs**:
+[cols="1,6"]
+|===
+|Code |Message
+
+| 214
+| Querying some authoritative nameservers via EDNS0 UDP yields truncation because of not supporting sufficient packet size. 
+
+| 222
+| Querying some authoritative nameservers via EDNS0 UDP yields timeout
+
+| 224
+| Querying some authoritative nameservers via EDNS0 UDP yields unreachable
+|===
+
+[[req:dnssec-cross-rrset,Verfügbarkeit des DNSKEY-RRSet]]
+===== Verfügbarkeit des DNSKEY-RRSet
+Das DNSKEY-RRSet **MUSS** entweder via TCP oder UDP signiert abrufbar sein.
+Andernfalls erfolgt die Ausgabe eines entsprechenden **ERROR**.
+
+**ERRORs**:
+[cols="1,6"]
+|===
+|Code |Message
+
+| 215
+| Timeout after switching from UDP to TCP - switch to TCP due to truncation
+
+| 223
+| Timeout after switching from UDP to TCP - switch to TCP due to timeout
+
+| 225
+| Timeout after switching from UDP to TCP
+
+| 219
+| Unable to retrieve DNSKEY RR with TCP or EDNS0
+|===
