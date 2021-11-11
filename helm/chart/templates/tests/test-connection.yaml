@@ -1,0 +1,25 @@
+{{- if .Values.testConnection.enabled }}
+apiVersion: v1
+kind: Pod
+metadata:
+  name: "{{ include "web-ui.fullname" . }}-test-connection"
+  labels:
+    {{- include "web-ui.labels" . | nindent 4 }}
+  annotations:
+    "helm.sh/hook": post-install,post-upgrade,post-rollback
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+spec:
+  containers:
+    - name: curl
+      image: quay.io/deniceg/denicid-pipelinetools
+      command: ['curl']
+      args: [
+        '--fail',
+        '--connect-timeout','5',
+        '--max-time','10',
+        '--retry','5',
+        '--retry-delay','60',
+        '--retry-max-time','300',
+        '{{ include "web-ui.fullname" . }}:{{ .Values.service.port }}/health']
+  restartPolicy: Never
+  {{- end }}

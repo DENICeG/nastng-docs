@@ -1,0 +1,117 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "nastng-docs.fullname" . }}
+  labels:
+    {{- include "nastng-docs.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "nastng-docs.selectorLabels" . | nindent 6 }}
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
+  template:
+    metadata:
+      labels:
+        {{- include "nastng-docs.selectorLabels" . | nindent 8 }}
+      annotations:
+      {{- if .Values.global.externalSecrets.enabled }}
+      {{- if eq .Values.global.externalSecrets.approach "vault" }}
+        vault.secrets: {{ tpl (toYaml .Values.vault.secrets)  . }}
+      {{- end }}
+      {{- end }}
+        checksum/configMap: "{{ toYaml .Values.env | sha256sum }}"
+      {{- with .Values.metrics }}
+        prometheus.io/port: '{{ .port }}'
+        prometheus.io/scrape: '{{ .enabled }}'
+        prometheus.io/path: '{{ .path }}'
+      {{- end }}
+    spec:
+    {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+      serviceAccountName: {{ include "nastng-docs.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: {{ .Chart.Name }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.image.repository }}:{{ .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          {{- with .Values.secretsRef }}
+          env:
+          {{- range $idx, $ref_secret := . }}
+          {{- with $ref_secret.load }}
+          {{- range $idy, $ref_secret_load := . }}
+            - name: {{ $ref_secret_load.name }}
+              valueFrom:
+                secretKeyRef:
+                  name: {{ tpl $ref_secret.secret $ }}
+                  key: {{ $ref_secret_load.key }}
+          {{- end }}
+          {{- end }}
+          {{- end }}
+          {{- end }}
+          envFrom:
+            - configMapRef:
+                name: {{ include "nastng-docs.fullname" . }}
+            {{- if not .Values.global.externalSecrets.enabled }}
+            - secretRef:
+                name: {{ include "nastng-docs.fullname" . }}
+            {{- end }}
+            {{- with .Values.secretsRef }}
+            {{- range $idx, $ref_secret := . }}
+            {{- if not $ref_secret.load }}
+            - secretRef:
+                name: {{ tpl $ref_secret.secret $ }}
+            {{- end }}
+            {{- end }}
+            {{- end }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.service.port }}
+              protocol: TCP
+          livenessProbe:
+            initialDelaySeconds: {{ .Values.probe.liveness.delay }}
+            periodSeconds: {{ .Values.probe.liveness.interval }}
+            timeoutSeconds: {{ .Values.probe.liveness.timeout }}
+            httpGet:
+              path: {{ .Values.probe.liveness.path }}
+              port: {{ .Values.probe.liveness.port }}
+          readinessProbe:
+            initialDelaySeconds: {{ .Values.probe.readiness.delay }}
+            periodSeconds: {{ .Values.probe.readiness.interval }}
+            timeoutSeconds: {{ .Values.probe.readiness.timeout }}
+            successThreshold:  {{ .Values.probe.readiness.successThreshold }}
+            failureThreshold: {{ .Values.probe.readiness.failureThreshold }}
+            httpGet:
+              path: {{ .Values.probe.readiness.path }}
+              port: {{ .Values.probe.readiness.port  }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          volumeMounts:
+            {{- if .Values.volumeMounts }}
+            {{- tpl (toYaml .Values.volumeMounts) . | nindent 12 }}
+            {{- end }}
+      volumes:
+        {{- if .Values.volumes }}
+        {{- tpl (toYaml .Values.volumes) . | nindent 8 }}
+        {{- end }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+    {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+    {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}

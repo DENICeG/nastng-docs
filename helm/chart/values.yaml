@@ -1,0 +1,49 @@
+replicaCount: 1
+
+image:
+  repository: registry.cloud.denic.de/teamdns/nastng-docs
+  pullPolicy: IfNotPresent
+
+metrics:
+  enabled: false
+  port: 8080
+  path: /metrics
+
+probe:
+  liveness:
+    path: /
+    port: 8080
+    delay: 150
+    timeout: 5
+    interval: 10
+  readiness:
+    path: /
+    port: 8080
+    delay: 5
+    timeout: 5
+    interval: 10
+    successThreshold: 1
+    failureThreshold: 2
+
+resources:
+  limits:
+    memory: 512Mi
+
+serviceAccount:
+  create: true
+  annotations: {}
+  name: ""
+
+podSecurityContext:
+  fsGroup: 30000
+  runAsNonRoot: true
+  runAsUser: 30000
+
+securityContext: {}
+
+service:
+  type: ClusterIP
+  port: 8080
+
+testConnection:
+  enabled: false

@@ -1,0 +1,17 @@
+= Nameserver Predelegation Check
+
+[.text-right]
+xref:index_de.adoc#Predelegation-Check-Specification[DE]
+
+In general nameserver predelegation check deals with the verification of nameservers across
+DNS based configuration and delegation. Wthin this, nameservers of a subjected domain are tested
+towards various checks to make sure that the domain can be delegated easily and securely.
+This guarantees a high level of quality for the domain. The following documentation is structured
+as follows: Section <<Documentation>> covers the technical definition of all executed predelagation
+checks (e.g. check scope, purpose, result etc). The end usage as a service (aka NASTng) is treated within <<Usage>>.
+
+== Documentation
+xref:spec/spec.adoc#Predelegation-Check-Specification[Start by reading the specification.]
+
+== Usage
+xref:nast/nast.adoc#NAST---Name-Server-Tester[Explore our NASTng service.]
