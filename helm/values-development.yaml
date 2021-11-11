@@ -1,0 +1,20 @@
+replicaCount: 1
+
+image:
+  repository: registry.cloud.denic.de/teamdns/nastng-docs
+  pullPolicy: Always
+
+service:
+  type: NodePort
+  port: 8080
+
+testConnection:
+  enabled: false
+
+vault:
+  secrets: "nastng-docs"
+
+global:
+  externalSecrets:
+    enabled: true
+    approach: vault

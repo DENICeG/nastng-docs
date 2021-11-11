@@ -1,0 +1,24 @@
+= nastng-proxy
+
+This projetc covers all NASTng related documentation (spec, guides etc.)
+
+== Usage
+
+The doc is based on AsciiDoc language. In order to export the doc to html or any other format asciidoctor language processor needs to be installed locally.
+
+=== Installation AsciiDoctor
+
+```
+sudo apt-get update
+sudo apt install asciidoctor
+```
+
+=== Export doc to html
+
+Change to /docs directory and execute the following command
+
+```
+asciidoctor '**/*.adoc'
+```
+
+

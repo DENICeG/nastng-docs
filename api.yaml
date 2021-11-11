@@ -1,0 +1,380 @@
+openapi: 3.0.0
+servers:
+  - url: '/'
+info:
+  description: ''
+  version: 1.0.0
+  title: NAST
+  termsOfService: ''
+  contact:
+    email: team-dns@denic.de
+tags: []
+paths:
+  /:
+    get:
+      summary: 'Homepage'
+      description: 'The root servlet path of the NAST server.'
+      parameters: []
+      operationId: 'nast.api_handler.get_homepage'
+      responses:
+        200:
+          description: 'NAST root servlet path.'
+          content:
+            text/plain:
+              schema:
+                type: string
+  /alive:
+    get:
+      summary: 'Alive endpoint'
+      description: 'Vital sign endpoint that indicates the life sign of the NAST server.'
+      parameters: []
+      operationId: 'nast.api_handler.get_alive'
+      responses:
+        200:
+          description: 'NAST server is up and running.'
+          content:
+            text/plain:
+              schema:
+                type: string
+  /ready:
+    get:
+      summary: 'Readiness endpoint'
+      description: 'Vital sign endpoint that indicates the NAST server is ready to serve API requests.'
+      parameters: []
+      operationId: 'nast.api_handler.get_ready'
+      responses:
+        200:
+          description: 'NAST server is ready to serve requests.' 
+          content:
+            text/plain:
+              schema:
+                type: string          
+  /metrics:
+    get:
+      summary: 'Metrics endpoint'
+      description: 'Central endpoint serving latest NAST metrics regarding e.g. errors, warning, requests etc.'
+      parameters: []
+      operationId: 'nast.metrics.get_metrics'
+      responses:
+        200:
+          description: 'Latest metrics in prometheus text format.'
+          content:
+            text/plain:
+              schema:
+                type: string
+
+          
+  /nast/{result_format}/{domainname}:
+    get:
+      summary: 'Predelegation checks endpoint for NAST legacy API v1 (deprecated)'
+      description: 'Legacy endpoint performing predelegation checks for a given domain on API v1 scope (deprecated). Please use API v2 [/v2/check/{domainname}](#operation/nast.api_handler_v2.get_check) for future purposes.'
+      parameters:
+        - name: result_format
+          in: path
+          required: True
+          schema:
+            type: string
+            enum:
+              - xml
+              - json
+          description: Response body format
+        - name: domainname
+          in: path
+          required: True
+          schema:
+            "$ref": "#/components/schemas/domain_name"
+        - name: ns1
+          in: query
+          required: True
+          schema:
+            "$ref": "#/components/schemas/nameserver_with_optional_ip"
+          examples: 
+            nameserver: 
+              value: ns1.denic.nast.
+              summary: Sample with nameserver only
+            nameserver_with_ips: 
+              value: ns1.denic.nast.,172.31.1.1,fd00:10:10::1:1
+              summary: Sample with nameserver plus optional IPs
+        - name: ns2
+          in: query
+          required: True
+          schema:
+            "$ref": "#/components/schemas/nameserver_with_optional_ip"
+          examples: 
+            nameserver: 
+              value: ns2.denic.nast.
+              summary: Sample with nameserver only
+            nameserver_with_ips: 
+              value: ns2.denic.nast.,172.31.2.2,fd00:10:10::2:2
+              summary: Sample with nameserver plus optional IPs
+        - name: policy
+          in: query
+          schema:
+            type: string
+            enum: [DE-DNSSEC-1.0]
+          description: Enables DNSSEC predelegation checks 
+        - name: nsX
+          in: query
+          style: pipeDelimited
+          explode: true
+          schema:
+            type: array
+            items:
+              "$ref": "#/components/schemas/nameserver_with_optional_ip"
+          example: 
+            - ns3.denic.nast.,172.31.3.3,fd00:10:10::3:3
+            - ns4.denic.nast.,172.31.4.4,fd00:10:10::4:4
+            - ns5.denic.nast.
+          description: Additional list of further nameservers with optional ip addresses
+        - name: dnskey
+          in: query
+          style: pipeDelimited
+          explode: true
+          schema:
+            type: array
+            items:
+              "$ref": "#/components/schemas/dnskey"
+          example: 
+            - 257 3 15 TTVxWTUvVUxrSHBCdE4reC9zVzVEQ05NRHJ4UnowTE9qUmVQS3dTRmlBPT0=
+            - 257 3 16 dHlOQUVsMjlEUWpiVjR5Uk14OXBxbVpTMHpSeWR0U09UV1pYNVpWdy81bzdwNGRkcEpWTElvemc0WmMrQWtBRUhHSlFFK3YxWEtvPQ==
+          description: List of base64 encoded public dnskeys in wire-text format
+        - name: debug
+          in: query
+          required: False
+          schema:
+            type: boolean
+            enum: [true,false]
+          description: Additional debug output for predelgation checks
+             
+           
+      operationId: 'nast.api_handler.get_query'
+      responses:
+        200:
+          description: 'NAST predelegation check results.'
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/check_result_v1"
+            application/xml:
+              schema:
+                type: string
+              example: |
+                <predelegation-check success="false" xsi:schemaLocation="../meta/nast_answer.xsd" xmlns="http://schema.denic.de/rng/nast" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+                  <issues>
+                    <issue code="902" severity="error">
+                      <message>Timeout (nameserver, ip, protocol)</message>
+                      <parameters>\n
+                        <parameter>ns2.denic.nast</parameter>
+                        <parameter>172.31.9.9</parameter>
+                        <parameter>udp</parameter>
+                        </parameters>
+                        .....
+                        .....
+                  </issues>\n
+                </predelegation-check>\n
+                
+  /v2/resolve/{domainname}:
+    get:
+      summary: 'Nameserver resolver endpoint for NAST API v2'
+      description: 'Major endpoint resolving nameservers for a given domain on API v2 scope.'
+      parameters:
+        - name: domainname
+          in: path
+          required: True
+          schema:
+            "$ref": "#/components/schemas/domain_name"
+      operationId: 'nast.api_handler_v2.get_resolve'
+      responses:
+        200:
+          description: 'NAST resolved nameservers.'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  dnskey:
+                    type: array
+                    description: List with dnskeys if any
+                    items:
+                      "$ref": "#/components/schemas/dnskey_object"
+                  domainname:
+                    "$ref": "#/components/schemas/domain_name"
+                  nameserver:
+                    type: object
+                    description: dictionary with nameserver names as key and list with IP addresses as value 
+                    additionalProperties:
+                      type: array
+                      description: list of IPv4 and IPv6 addresses
+                      items:
+                        "$ref": "#/components/schemas/ip_address"
+        404:
+          description: 'No nameservers found in DNS for the given domain.'
+          content:
+            application/json:
+              schema:
+                type: object
+
+
+                            
+  /v2/check/{domainname}:
+    get:
+      summary: 'Predelegation checks endpoint for NAST API v2'
+      description: 'Major endpoint performing predelegation checks for a given domain on API v2 scope.'
+      parameters:
+        - name: domainname
+          in: path
+          required: True
+          schema:
+            "$ref": "#/components/schemas/domain_name"
+          example: denic.nast
+        - name: ns1
+          in: query
+          required: True
+          schema:
+            "$ref": "#/components/schemas/nameserver_with_optional_ip"
+          examples: 
+            nameserver: 
+              value: ns1.denic.nast.
+              summary: Sample with nameserver only
+            nameserver_with_ips: 
+              value: ns1.denic.nast.,172.31.1.1,fd00:10:10::1:1
+              summary: Sample with nameserver plus optional IPs
+        - name: ns2
+          in: query
+          required: True
+          schema:
+            "$ref": "#/components/schemas/nameserver_with_optional_ip"
+          examples: 
+            nameserver: 
+              value: ns2.denic.nast.
+              summary: Sample with nameserver only
+            nameserver_with_ips: 
+              value: ns2.denic.nast.,172.31.2.2,fd00:10:10::2:2
+              summary: Sample with nameserver plus optional IPs
+        - name: nsX
+          in: query
+          style: pipeDelimited
+          explode: true
+          schema:
+            type: array
+            items:
+              "$ref": "#/components/schemas/nameserver_with_optional_ip"
+          description: Additional list of further nameservers with optional ip addresses
+          example: 
+            - ns3.denic.nast.,172.31.3.3,fd00:10:10::3:3
+            - ns4.denic.nast.,172.31.4.4,fd00:10:10::4:4
+            - ns5.denic.nast.
+        - name: dnskey
+          in: query
+          style: pipeDelimited
+          explode: true
+          schema:
+            type: array
+            items:
+              "$ref": "#/components/schemas/dnskey"
+            description: List of base64 encoded public dnskeys in wire-text format
+          example: 
+            - 257 3 15 TTVxWTUvVUxrSHBCdE4reC9zVzVEQ05NRHJ4UnowTE9qUmVQS3dTRmlBPT0=
+            - 257 3 16 dHlOQUVsMjlEUWpiVjR5Uk14OXBxbVpTMHpSeWR0U09UV1pYNVpWdy81bzdwNGRkcEpWTElvemc0WmMrQWtBRUhHSlFFK3YxWEtvPQ==
+        - name: debug
+          in: query
+          required: False
+          schema:
+            type: boolean
+            enum: [true,false]
+      operationId: 'nast.api_handler_v2.get_check'
+      responses:
+        200:
+          description: 'NAST predelegation check results'
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/check_result_v2"
+               
+                              
+
+components:
+  schemas:
+    domain_name:
+      type: string
+      maxLength: 255
+      description: Domain name
+    nameserver_with_optional_ip:
+      type: string
+      description: Comma-separated string containing the nameserver with optional ip addresses
+    dnskey:
+      type: string
+      pattern: '^[a-zA-Z0-9+=/\s,:\.\-]+$'
+      description: A base64 encoded public dnskey in wire-text format
+    ip_address:
+      type: string
+      pattern: '^[a-fA-F0-9:\.]+$'
+      description: IPv4 or IPv6 addresss
+    dnskey_object:
+      type: object
+      properties:
+        algorithm:
+          type: integer
+          minimum: 1
+          maximum: 255
+        flags:
+          type: integer
+          enum: [256,257]
+        protocol:
+          type: integer
+          enum: [3]
+        key:
+          "$ref": "#/components/schemas/dnskey"
+    check_result_v1:
+      type: object
+      properties:
+        success:
+          type: boolean
+          description: is true when NAST-check was successfull, is false in case of errors
+        issues:
+          type: array
+          items:
+            type: object
+            properties:
+              arguments:
+                type: array
+                items:
+                  type: string
+              code:
+                type: integer
+              message:
+                type: string
+              severity:
+                type: string
+                enum: ['info', 'warning', 'error']
+              
+    check_result_v2:
+      type: object
+      properties:
+        success:
+          type: boolean
+          description: is true when NAST-check was successfull, is false in case of errors
+        issues:
+          type: array
+          items:
+            type: object
+            properties:
+              arguments:
+                type: object
+                nullable: true
+                additionalProperties:
+                  type: string
+                  nullable: true
+              code:
+                type: integer
+              message:
+                type: string
+              severity:
+                type: string
+                enum: ['info', 'warning', 'error']
+          
+    
+
+  links: {}
+  callbacks: {}
+security: []

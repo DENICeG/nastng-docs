@@ -1,0 +1,23 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "nastng-docs.fullname" . }}
+  labels:
+    {{- include "nastng-docs.labels" . | nindent 4 }}
+    {{- with .Values.service.loadbalancer }}
+    cis.f5.com/as3-app: '{{ .app }}'
+    cis.f5.com/as3-pool: '{{ .pool }}'
+    cis.f5.com/as3-tenant: '{{ .tenant }}'
+    {{- end }}
+spec:
+  type: {{ .Values.service.type }}
+  ports:
+    - port: {{ .Values.service.port }}
+      targetPort: {{ .Values.service.port }}
+      protocol: TCP
+      name: http
+  selector:
+    {{- include "nastng-docs.selectorLabels" . | nindent 4 }}
+  {{- if eq .Values.service.type "NodePort" }}
+  externalTrafficPolicy: Local
+  {{- end }}
