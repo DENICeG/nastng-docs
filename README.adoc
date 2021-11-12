@@ -1,4 +1,4 @@
-= nastng-proxy
+= nastng-docs
 
 This projetc covers all NASTng related documentation (spec, guides etc.)
 
