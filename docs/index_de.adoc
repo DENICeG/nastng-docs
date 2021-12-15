@@ -5,14 +5,14 @@ xref:index.adoc#Predelegation-Check-Specification[EN]
 
 Der Nameserver Predelegation Check beinhaltet die Verifikation von Nameservern und deren Konfiguration
 hinsichtlich DNS basierter Zonen-Delegation. Hierbei werden die Nameserver einer bestimmten Zone (Domain)
-verschiedenen Tests unterzogen, um sicherzustellen, dass sie korrekt konfiguriert sind und die Domain sicher
+verschiedenen Tests unterzogen, um sicherzustellen, dass sie korrekt konfiguriert sind, und die Domain sicher
 und einfach delegiert werden kann. Damit wird ein hoher Grad an Qualität für die Domain erzielt. Die nachfolgende
 Dokumentation ist wiefolgt aufgebaut: Der Abschnitt <<Dokumentation>> behandelt die eigentliche technische Anforderung
-(Spezifikation) hinsichtlich der Namersever Konfiguration. Die eigentliche Anwedung als eigenständiger
+(Spezifikation) hinsichtlich der Namersever Konfiguration. Die Anwedung als eigenständiger
 Service (bekannt als NASTng) wird in Abschnitt <<Anwendung>> beschrieben.
 
 == Dokumentation
 xref:spec/spec_de.adoc#Predelegation-Check-Specification[Beginnen Sie zum Einstieg mit dem Lesen der Spezifikation.]
 
 == Anwendung
-xref:nast/nast_de.adoc#NAST---Name-Server-Tester[Lernen Sie unseren NASTng Service kennen.]
+xref:nast/nast_de.adoc#NAST---NameServer-Tester[Lernen Sie unseren NASTng Service kennen.]
