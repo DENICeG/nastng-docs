@@ -2,13 +2,13 @@
 
 Different issue types (i.e warning, error) are used to describe violations within
 check execution. Therefore each check requirement represents a criteria that **MUST**
-or **SHOULD** be fullfilled. According to this, the relationship between check
+or **SHOULD** be fullfilled. According to this, the relation between check
 requirement and issues type is defined as follows:
  
 **WARNING**: 
 This issue covers the violation of a requirement that **SHOULD** be fullfilled.
 Any occurence of this type is treated as a recommendation and none-critical. It will not
-affect the overall result of predelegation check themselves.  
+affect the overall result of predelegation checks themselves.  
 
 **ERROR**:
 This issue covers the violation of a requirement that ** MUST ** be fullfilled.
@@ -32,8 +32,8 @@ results in **ERROR**.
 
 **Further explanation:**
 Requesting authoritative nameservers only ensures the agreement towards
-final zone delegation of the requested domain. This is necessary because namesevers can
-be opareted by any uncontracted third party (i.e. none-members) of Denic e.G.. Additional
+the final zone delegation of the requested domain. This is necessary because namesevers can
+be operated by any uncontracted third party (i.e. none-members) of DENIC e.G.. Additional
 notes can be found in https://www.ietf.org/rfc/rfc1034.txt[RFC1034] and 
 https://www.ietf.org/rfc/rfc1035.txt[RFC1035].
 
@@ -71,7 +71,7 @@ One Nameserver differs completely from another by using different IPv4
 and IPv6 addresses. Besides, all available IP addresses of every nameserver will be
 resolved and considered within predelgation check.
 According https://www.ietf.org/rfc/rfc1035.txt[RFC1035], each zone must
-be delegable by a two-leveled redundancy setup by at least two different nameservers
+be delegable by two-levelled redundancy setup by at least two different nameservers
 that can be addressed by distinguished IPs. 
 
 Example: Valid set of nameservers
@@ -98,16 +98,16 @@ Example: Invalid set of nameservers
 | 172.31.1.1', 'fd00:10:10::2:2
 |===
 
-==== Glue-Records
+==== Glue Records
 
-Predelegation check uses narrow glue policy. Hence, glue-records need to be available in .de zone
+The predelegation check uses narrow glue policy. Hence, glue records need to be available in .de zone
 (i.e. 9.4.164.arpa) if the name of any corresponding nameserver is located within the delegated zone only.
 
 Based on that the following requirements can be derived:
 
 [[req:nameserver-in-zone,Nameserver in Zone]]
 ===== Nameserver in Zone
-At least one IP address (i.e. IPv4 or IPv6) **MUST** be specified in check request for any nameserver
+At least one IP address (i.e. IPv4 or IPv6) **MUST** be specified in the check request for any nameserver
 located within the delegated zone. Any violation results in corresponding **ERROR** below.
 
 **ERRORs**:
@@ -120,11 +120,11 @@ located within the delegated zone. Any violation results in corresponding **ERRO
 |===
 
 **Further explanation:**
-Considering both addressing cases IPv4 and IPv6 at least one glue-record is required.
+Considering both addressing cases IPv4 and IPv6 at least one glue record is required.
 
 [[req:nameserver-not-in-zone,Nameserver NOT in Zone]]
 ===== Nameserver NOT in Zone
-None IP address (i.e. IPv4 or IPv6) **SHOULD** be specified in check request for any nameserver
+No IP address (i.e. IPv4 or IPv6) **SHOULD** be specified in the check request for any nameserver
 NOT located within delegated zone. Otherwise **WARNING**.
 
 **WARNINGs**:
@@ -137,13 +137,14 @@ NOT located within delegated zone. Otherwise **WARNING**.
 |===
 
 **Further explanation:**
-Because narrow glue policy is used just glue records (i.e. A, AAAA) of zone located nameservers are allowed.
-Any further IP address of nameservers not located within delegated zone are dispensable.
+The narrow glue policy is applied for .de as well as for 9.4.e164.arpa. Hence, glue records
+are only allowed for the limited case that the nameserver is located in the delegated zone.
+Any additionally provided IP addresses are dispensable. The warning shall point out possible input errors.
 
 [[req:ips-rrset-consistency,IPs and RRSet Consistency]]
 ===== IPs and RRSet Consistency
-For each specified IP address of any nameserver in check request the corresponding A- and AAAA-RRset **MUST**
-be retrievable in authoritative mode and match with request's specified IPs. Otherwise **ERROR**.
+For each specified IP address of any nameserver in the check request the corresponding A and AAAA RRSet **MUST**
+be retrievable in authoritative mode and match with the request's specified IPs. Otherwise **ERROR**.
 
 **ERROR**:
 [cols="1,6"]
@@ -154,10 +155,10 @@ be retrievable in authoritative mode and match with request's specified IPs. Oth
 | Inconsistent set of nameserver IP addresses
 |===
 
-**Further explanation:** Since glue-records as well as authoritative data coexist in DNS both need 
+**Further explanation:** Since glue records as well as authoritative data coexist in DNS both need 
 to be accessible and consistent. Therefore, the retrieved IPs from DNS must match the request's origin IPs.
-Besides, this requirement ensures equivalence between glue records and the A- and AAAA-RRset related data
-(e.g. missing IPs in glue-records).
+Besides, this requirement ensures equivalence between glue records and the A and AAAA RRSet related data
+(e.g. missing IPs in glue records).
 
 ==== SOA Zone Data
 
@@ -173,14 +174,14 @@ The value **SHOULD** be in range of [3600,86400] seconds. Otherwise **WARNING**.
 |Code |Message
 
 | 108
-| Refresh value ot of range
+| Refresh value out of range
 |===
 
 **Further explanation:**
 This value specifies the refresh interval in data sync between master/slave nameservers.
 Lower rates will cause higher DNS traffic and load on corresponding systems.
-On the opposite, high rates will lead to more unupdated data. Therefore, any violation results in warning
-because the setting gets defined by the nameserver operators.
+On the opposite, high rates will lead to more outdated data. Therefore, any violation results in warning
+because the setting is defined by the nameserver operators.
 
 [[req:soa-retry,Retry]]
 ===== Retry
@@ -197,8 +198,8 @@ and 1/3 of <<Refresh>>. Otherwise corresponding **WARNING** will be issued.
 |===
 
 **Further explanation:**
-This value overrules the refresh value if SOA sync between nameservers failed and will continue until sync
-is achieved or expiry threshold is reached. Hence the value needs to be lower than <<Refresh>>. Keep in mind that
+This value overrules the refresh value if SOA sync between nameservers fails and will continue until sync
+is achieved or expiry threshold is reached. Hence, the value needs to be lower than <<Refresh>>. Keep in mind that
 smaller values will increase load. Besides, the requirement ensures balance between <<Refresh>> and <<Retry>> and
 guarantees advantage in switch over between those. 
 
@@ -242,9 +243,9 @@ will disable the functionalty of NegTTL completely.
 
 ==== Additional Zone Data
 
-[[req:ns-rrset-consistency,NS-RRSet Consistency]]
-===== NS-RRSet Consistency
-The NS-RRset of the delegated zone **MUST** match the request's nameserver list completely.
+[[req:ns-rrset-consistency,NS RRSet Consistency]]
+===== NS RRSet Consistency
+The NS RRSet of the delegated zone **MUST** match the request's nameserver list completely.
 Otherwise **ERROR**.
 
 **ERROR**:
@@ -260,9 +261,9 @@ Otherwise **ERROR**.
 https://www.ietf.org/rfc/rfc1034.txt[RFC1034] specifies consistency between
 authoritative nameservers of the delegating and delegated zone.
 
-[[req:none-cname-rr,None CNAME-RR]]
-===== None CNAME-RR
-The delegated zone **MUST** be free of any CNAME-RR. Otherwise **ERROR**.
+[[req:none-cname-rr,No CNAME RR]]
+===== No CNAME RR
+The delegated zone **MUST** be free of any CNAME RR. Otherwise **ERROR**.
 
 **ERROR**:
 [cols="1,6"]
@@ -274,13 +275,13 @@ The delegated zone **MUST** be free of any CNAME-RR. Otherwise **ERROR**.
 |===
 
 **Further explanation:**
-CNAME-RR must be unique on every node within the DNS tree. Hence, any further CNAME-RR within
+CNAME RR must be unique on every node within the DNS tree. Hence, any further CNAME RR within
 the delegated zone violates this specification.
 
 [[req:referral-response,Referral Response Size]]
 ===== Referral Response Size
-The referral reponse size **MUST** fit the max DNS udp packet size of 512 Bytes (including
-large QNAMEs, all adddress entries and glue-records). Otherwise **ERROR**.
+The referral reponse size **MUST** fit the max DNS UDP packet size of 512 Bytes (including
+large QNAMEs, all address entries and glue records). Otherwise **ERROR**.
 
 **ERROR**:
 [cols="1,6"]
@@ -292,14 +293,14 @@ large QNAMEs, all adddress entries and glue-records). Otherwise **ERROR**.
 |===
 
 **Further explanation:**
-All Denic nameserver query responses cover a Referral (i.e. link) towards the corresponding,
-next leveled nameserver in zone delegation hierarchy. Hence, this requirement is used to
-avoid high workloads of TCP based fallback retries due to truncation of former UDP requests.
+All DENIC nameserver query responses cover a referral (i.e. link) towards the corresponding,
+next levelled nameserver in the zone delegation hierarchy. Hence, this requirement is used to
+avoid high loads of TCP based fallback retries due to truncation of former UDP requests.
 
 [[req:prime-ns-consistency,Primary Nameserver Consistency]]
 ===== Primary Nameserver Consistency
-The primary namserver (i.e. MNAME-RR) of the delegated zone **SHOULD** be consistent in
-the SOA-RR of any related nameserver. Otherwise **WARNING**.
+The primary namserver (i.e. MNAME RR) of the delegated zone **SHOULD** be consistent in
+the SOA RR of any related nameserver. Otherwise **WARNING**.
 
 **WARNING**:
 [cols="1,6"]
@@ -320,7 +321,7 @@ Additional ungrouped requirements are summarized below:
 [[req:ipv6,IPv6]]
 ===== IPv6
 All IPv6 addresses of any nameserver ***MUST*** be located within the same global unicast
-address scope, allocated and routable. Any violation results in corresponding **ERROR** below.
+address scope, allocated and routable. Any violation results in the corresponding **ERROR** below.
 
 **ERRORs**:
 [cols="1,6"]
@@ -357,7 +358,7 @@ security reasons.
 
 [[req:tcp-reachability,TCP Reachability]]
 ===== TCP Reachability
-Any nameserver in check request **SHOULD** be reachable via TCP connection. Otherwise corresponding
+Any nameserver in check request **SHOULD** be reachable via TCP connection. Otherwise the corresponding
 **WARNING** will be issued.
 
 **WARNINGs**:
@@ -376,4 +377,4 @@ Any nameserver in check request **SHOULD** be reachable via TCP connection. Othe
 Within https://www.ietf.org/rfc/rfc1034.txt[RFC1034] and https://www.ietf.org/rfc/rfc1035.txt[RFC1035]
 TCP based DNS requests are supported too, but should be used as a fallback approach towards prior
 failed UDP requests only. Hence, if a UDP request fails on first level (e.g. due to truncation etc.)
-a switch over to TCP could be possible as mentioned in https://www.ietf.org/rfc/rfc123.txt[RFC123].
+a switch over to TCP can be possible as mentioned in https://www.ietf.org/rfc/rfc123.txt[RFC123].

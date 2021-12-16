@@ -1,0 +1,2 @@
+210 - Max 5 DNSKEY RR allowed
+207 - DNSKEY RR public key must be base64 encoded

@@ -146,7 +146,7 @@
 
 | 207
 | ERROR
-| DNSKEY RR public key must be BASE64 encoded
+| DNSKEY RR public key must be base64 encoded
 | <<req:dnskey>>
 
 | 208
@@ -156,7 +156,7 @@
 
 | 210
 | ERROR
-| At most 5 DNSKEY RR allowed
+| Max 5 DNSKEY RR allowed
 | <<req:dnskey-parameters>>
 
 | 211

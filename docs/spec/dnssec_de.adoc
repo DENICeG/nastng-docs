@@ -14,10 +14,10 @@ Fingerprint in einem DS-RR (Delegation Signer) abgelegt.
 
 Für die Provisionierung des Schlüsselmaterials wird der DNSKEY-RR verwendet.  
 Bis zu fünf DNSKEY-RRs können pro Domain registriert werden. Im Rahmen der 
-Zonengenerierung werden die entsprechenden DS-Records7 erzeugt (derzeit genau ein 
+Zonengenerierung werden die entsprechenden DS-Records erzeugt (derzeit genau ein 
 DS-RR pro mitgeteiltem Trust Anchor), signiert und mit der Zone verteilt. 
 
-=== Aufbau des Dnskey-RR
+=== Aufbau des DNSKEY-RR
 
 Jeder Dnskey-RR wird als Wire-Text-Format im Auftrag übergeben (siehe https://www.ietf.org/rfc/rfc4034.txt[RFC4034]).
 Der Aufbau ist wie folgt:
@@ -65,7 +65,7 @@ enthalten ist.
 === Validierungskette und Konzept
 
 Im Betrieb von DNSSEC ist die Validierung der _Proof of Possession_ und der _Chain of Trust_
-von maßgebender Bedeutung. Diese sind wiefolgt definiert:
+von maßgebender Bedeutung. Diese sind wie folgt definiert:
 
 _Proof of Possession:_ Beinhaltet die Gültigkeitsprüfung der Signatur des DNSKEY-RRSet der 
 delegierten Zone. Der im Auftrag übergebene KSK wird dazu gewöhnlich verwendet. Diese Überprüfung
@@ -83,8 +83,8 @@ Basierend auf diesem Konzept ergeben sich die nachfolgenden <<Anforderungen>>.
 === Anforderungen
 
 Zu Beginn wird das im Auftrag übergebene Schlüsselmaterial einer mehrstufigen Prüfung unterzogen
-(z.B. Flags, Algorithmen, Public Key Feld etc.), im folgenden dann Tests unter Einbeziehung der im
-DNS abrufbaren Information angestellt.
+(z.B. Flags, Algorithmen, Public Key Feld etc.), im Folgenden werden dann weitere Tests unter Einbeziehung der im
+DNS abrufbaren Information ausgeführt.
 
 [[req:dnskey-parameters,DNSKEY: Parameter]]
 ==== DNSKEY: Parameter
@@ -101,7 +101,7 @@ im Auftrag **MUSS** &le; 5 sein. Andernfalls erfolgt die Ausgabe eines entsprech
 | Duplicate DNSKEY RR
 
 | 210
-| At most 5 DNSKEY RR allowed
+| Max 5 DNSKEY RR allowed
 |===
 
 ==== DNSKEY: Flags
@@ -110,7 +110,7 @@ zugewiesen markiert sind. Das Feld wird ausschließlich als numerischer Wert (0 
 
 [[req:dnskey-flags-zone-bit,ZONE Bit]]
 ===== ZONE Bit
-Bit 7 (ZONE) **MUSS** gesetzt sein. Ssonst Ausgabe von **ERROR**. 
+Bit 7 (ZONE) **MUSS** gesetzt sein. Sonst Ausgabe von **ERROR**. 
 
 **ERROR**:
 [cols="1,6"]
@@ -138,7 +138,7 @@ Bit 8 (REVOKE) **MUSS** ge-cleared sein. Sonst Ausgabe von **ERROR**.
 |===
 
 **Erläuterung:**
-Folgt aus https://www.ietf.org/rfc/rfc5011.txt[RFC5011]. Ein Zurückgerufener Schlüssel kann nicht als Trust 
+Folgt aus https://www.ietf.org/rfc/rfc5011.txt[RFC5011]. Ein zurückgerufener Schlüssel kann nicht als Trust 
 Anchor fungieren. 
 
 [[req:dnskey-flags-sep-bit,SEP Bit]]
@@ -155,7 +155,7 @@ Bit 15 (SEP) **SOLL** gesetzt sein. Sonst Ausgabe von **WARNING**.
 |===
 
 **Erläuterung:**
-Dieses Feld soll den KSK im DNSKEY-RRSet identifizieren. Es entspricht guter Praxis, es 
+Dieses Feld soll den KSK im DNSKEY-RRSet identifizieren. Es entspricht Best Practice, es 
 für KSKs bzw. Trust Anchor zu setzen, auch wenn Validatoren es nicht auswerten sollen.
 
 [[req:dnskey-flags-values,Erlaubte Werte]]
@@ -175,7 +175,8 @@ als möglicher Wert gewählt werden. Alle anderen Werte implizieren einen **ERRO
 ==== DNSKEY: Protocol
 
 Das Feld Protocol **MUSS** den Wert "3" haben. Dieser Wert ist in https://www.ietf.org/rfc/rfc2308.txt[RFC4034]
-zwingend vorgeschrieben und wird somit statisch angenommen. Es erfolgt daher keine Issue-Ausgabe bei Verstoß.  
+zwingend vorgeschrieben und wird somit statisch angenommen. Es erfolgt daher weder eine **WARNING** noch ein **ERROR**
+bei Verstoß.
 
 [[req:dnskey-algo,DNSKEY: Algorithm]]
 ==== DNSKEY: Algorithm
@@ -210,7 +211,7 @@ Sonst Ausgabe von **ERROR**.
 |Code |Message
 
 | 207
-| DNSKEY RR public key must be BASE64 encoded
+| DNSKEY RR public key must be base64 encoded
 |===
 
 Die interne Struktur hängt vom verwendeten Algorithmus ab, so entsprechend auch deren nachfolgende
@@ -251,7 +252,7 @@ Die Grenzen folgen aus http://www.ietf.org/rfc/rfc3110.txt[RFC3110].
 
 ===== DSA
 
-Für die DSA basierten Algorithmen 3 und 6 gilt folgendes.
+Für die DSA basierten Algorithmen 3 und 6 gilt Folgendes.
 
 [[req:dnskey-alg-dsa-t,T Parameter]]
 ====== T Parameter
@@ -416,13 +417,13 @@ Ausgabe von **ERROR**.
 
 **Erläuterung:**
 Diese Anforderung enstpricht der <<Validierungskette und Konzept, Chain of Trust>> und
-verhindert Security Lameness. Die Validierung ist auf die delegierte Zone beschränkt damit
+verhindert Security Lameness. Die Validierung ist auf die delegierte Zone beschränkt, damit
 auch unregistrierte Domains beauftragt werden können.
 
 ==== Übergreifende Regeln 
 
 Neben den auf die Zonendaten abgestellten Anforderungen ergeben sich durch DNSSEC Anforderungen
-an die autoritativen Server bzw. die sie umgebende Infrastruktur.
+an die autoritativen Server bzw. die sie umgebende Infrastruktur weitere Regeln.
 
 [[req:dnssec-cross-edns0,EDNS0 Support]]
 ===== EDNS0 Support
@@ -441,7 +442,7 @@ auf Anfragen mit dem DO-Bit signierte, DNSSEC-konforme Antworten liefern. Sonst 
 [[req:dnssec-cross-udp,UDP basiertes EDNS0]]
 ===== UDP basiertes EDNS0
 Jeder autoritative Server **SOLL** UDP hinsichtlich der Erweiterung EDNS0 mit ausreichender
-Paketgröße und Vefügbarkeit unterstützen. Andernfalls erfolgt die Ausgabe einer entsprechenden
+Paketgröße und Verfügbarkeit unterstützen. Andernfalls erfolgt die Ausgabe einer entsprechenden
 **WARNING**. 
 
 **WARNINGs**:

@@ -1,4 +1,4 @@
-= NAST - Name Server Tester
+= NAST - NameServer Tester
 
 [.text-right]
 xref:nast_de.adoc[DE]

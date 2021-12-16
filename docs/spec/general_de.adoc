@@ -7,16 +7,16 @@ deren Einhaltung ist wie folgt definiert:
 
 **ERROR**: 
 Obligatorisch zu erfüllende Anforderungen werden mit **MUSS** beschrieben, ein Verstoß
-führt zur Ausgabe eins **ERROR** welcher das Check-Gesamtergebnis letztlich negativ
+führt zur Ausgabe eines **ERROR**, welcher das Check-Gesamtergebnis letztlich negativ
 beeinflusst. 
 
 **WARNING**:
-Empfehlungen werden mit **SOLL** beschrieben, ein Verstoß führt zur Ausgabe einer **WARNING**
+Empfehlungen werden mit **SOLL** beschrieben, ein Verstoß führt zur Ausgabe einer **WARNING**,
 welche das Check-Gesamtergebnis letztlich nicht beeinflusst.
 
-[[req:authoritative-ns-only,Authoritative Nameserver]]
-==== Authoritative Nameserver
-Alle im Auftrag angegebenen Nameserver müssen erreichbar und für die beantragte Zone 
+[[req:authoritative-ns-only,Autoritative Nameserver]]
+==== Autoritative Nameserver
+Jeder der im Auftrag enthaltenen Nameserver **MUSS** erreichbar und für die beantragte Zone 
 autoritativ sein. Sonst Ausgabe von **ERROR**. 
 
 **ERRORs**:
@@ -31,8 +31,8 @@ autoritativ sein. Sonst Ausgabe von **ERROR**.
 **Erläuterung:**
 Da der Betreiber des Nameservers sich sowohl vom Domaininhaber als auch vom verwaltenden
 Mitglied unterscheiden kann und darum im Rahmen der Domaindelegation kein Vertragspartner
-der DENIC ist, eine Delegation aber zu seinen Lasten geht, wird auf diesem Wege das
-Einverständnis mit dieser Delegation unterstellt, wenn die Zone autoritativ bedient wird.
+der DENIC ist, eine Delegation aber zu seinen Lasten geht, wird durch das autoritative Bedienen
+der Zone das Einverständnis zu dieser Delegation unterstellt.
 Im übrigen entspricht die Vorabprüfung dem Geist und Text der RFCs https://www.ietf.org/rfc/rfc1034.txt[1034]
 und https://www.ietf.org/rfc/rfc1035.txt[1035].
 
@@ -44,7 +44,7 @@ Die Anfrage **MUSS** mindestens zwei Nameserver beinhalten, von denen mindestens
 und IPv6-Adressen für die weitere Prüfung ermittelt bzw. gegebenenfalls dem Auftrag
 entnommen. Es **MUSS** mindestens einen Nameserver im Auftrag geben, dessen IP-Adresse sich
 von den IP-Adressen sämtlicher anderer Nameserver desselben Auftrags unterscheidet.
-Andernfals erfolgt enstrepchend die Ausgabe folgender **ERROR**. 
+Andernfals erfolgt entsprechend die Ausgabe folgender **ERRORs**. 
 
 **ERRORs**:
 [cols="1,6"]
@@ -165,7 +165,7 @@ Sonst Ausgabe von **ERROR**.
 sichergestellt werden, dass sie konsistent sind, die Adressangaben in den Glue-
 Records also mit den auf „normalem Wege“ ermittelten autoritativen Daten 
 übereinstimmen. Des Weiteren gebietet die Konsistenz, RRSets (Record Sets, also ein 
-oder mehrere Records gleichen Typs4) immer vollständig anzugeben, nicht etwa nur 
+oder mehrere Records gleichen Typs) immer vollständig anzugeben, nicht etwa nur 
 eine von zwei Adressen eines Nameservers für die Glue-Records zu verwenden. 
 Schließlich wird die „Narrow Glue Policy“ sowohl auf IPv4 als auch auf IPv6 
 angewandt, d.h. wenn entsprechende Records-Sets (A oder AAAA) in den autoritativen 
@@ -237,7 +237,7 @@ Slave die weitere Unterstützung der Zone einstellt. Werte unterhalb einer Woche
 kritisch, weil sie dafür sorgen können, dass eine Zone binnen kurzer Zeit sämtliche autoritativen
 Nameserver verliert und dadurch zu 100% lahm delegiert wird. 1000 Stunden, hier als Obergrenze
 angenommen, ist ein verbreiteter Wert, oberhalb dessen von einem ernsten Abgleichproblem
-ausgegangen werden kann, dass nicht ignoriert werden sollte.
+ausgegangen werden kann, das nicht ignoriert werden sollte.
 
 [[req:soa-negttl,NegTTL]]
 ===== NegTTL
@@ -263,7 +263,7 @@ kompletten Abschaltung des „negative Caching“, was es zu vermeiden gilt.
 
 [[req:ns-rrset-consistency,NS-RRSet Konsistenz]]
 ===== NS-RRSet Konsistenz
-Das NS-RRSet **MUSSS** exakt mit der im Auftrag angegebenen Liste der Nameserver 
+Das NS-RRSet **MUSS** exakt mit der im Auftrag angegebenen Liste der Nameserver 
 übereinstimmen. Sonst Ausgabe von **ERROR**. 
 
 **ERROR**:
@@ -313,7 +313,7 @@ also 512 Bytes nicht überschreiten. Sonst Ausgabe von **ERROR**.
 | Calculated referral response larger than allowed
 |===
 
-**Further explanation:**
+**Erläuterung:**
 Die Nameserver der DENIC antworten bei Anfragen nach Daten in delegierten Zonen mit einem
 Verweis (Referral) auf die tatsächlich zuständigen Nameserver der nächsten Hierarchiestufe.
 Standard-UDP-Pakete lassen maximal 512 Bytes Nutzlast zu. Um zu verhindern, dass die
@@ -325,7 +325,7 @@ Berechnung sicherer als die Vorgabe einer maximalen Anzahl von Nameservern.
 
 [[req:prime-ns-consistency,Primary Nameserver]]
 ===== Primary Nameserver
-Die Angabe des Primary Nameservers im SOA -RR der beantragten Zone **SOLL** auf allen 
+Die Angabe des Primary Nameservers im SOA-RR der beantragten Zone **SOLL** auf allen 
 Nameservern übereinstimmen. Sonst Ausgabe von **WARNING**.
 
 **WARNING**:
