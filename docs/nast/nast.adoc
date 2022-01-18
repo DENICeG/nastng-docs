@@ -1,0 +1,13 @@
+= NAST - NameServer Tester
+
+[.text-right]
+xref:nast_de.adoc[DE]
+
+== Web-Interface
+https://nastng.denic.de[Start by using our friendly webservice.]
+
+== Service API
+link:api.html[Explore our NASTng service API.]
+
+== Open Sources
+https://gitlab.com/teamdns/nastng[Contribute to improve NASTng.]

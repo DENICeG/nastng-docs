@@ -1,0 +1,18 @@
+=== Background
+
+This documentation specifies the requirements across DNS related nameservers and their managed zones.
+These requirements must be fullfilled in order to guarantee that an existing DENIC domain can be delegated
+properly. Therefore, the following sections describe namesever policies as well as the
+corresponding predelegation check requirements.
+
+=== Theories of Motivation
+
+The Domain Name System (DNS) represents a hierarchical, distributed and highly available database used
+for any kind of IP address translations within IT networking and infrastructure sector. Therefore, DNS
+enforces high redundancy and fault resilience. However, due to faulty networking or human
+miss-configuration invalid domain resolving still might occur as described in https://www.ietf.org/rfc/rfc1034.txt[RFC46971].
+In order to guarantee stable zone delegation on any level, TLD administration defines requirements and
+criterias that must or should be fullfilled within proper DNS operation. Based on that, this
+document describes a pre-staged procedure named as _Predelegation Check_ which is used to
+validate the compliance in zone delegation of a corresponding user domain effectively and
+securely. 

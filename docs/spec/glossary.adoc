@@ -1,0 +1,281 @@
+=== Issue Codes
+
+[cols="1,1,4,1"]
+|===
+|Code |Severity |Message |Section ref.
+
+| 101
+| ERROR
+| Missing glue record for the nameserver
+| <<req:nameserver-in-zone>>
+
+| 102 
+| WARNING
+| Provided glue records not applicable
+| <<req:nameserver-not-in-zone>>
+
+| 104
+| ERROR
+| Calculated referral response larger than allowed
+| <<req:referral-response>>
+
+| 106
+| ERROR
+| Inconsistent set of nameserver IP addresses
+| <<req:ips-rrset-consistency>>
+
+| 107
+| ERROR
+| Insufficient diversity of nameserver's IP addresses
+| <<req:connectivity>>
+
+| 108
+| WARNING
+| Refresh value out of range
+| <<req:soa-refresh>>
+
+| 109
+| WARNING
+| Retry value out of range 
+| <<req:soa-retry>>
+
+| 110
+| WARNING
+| Retry value out of range
+| <<req:soa-retry>>
+
+| 111
+| WARNING
+| Expire value out of range
+| <<req:soa-expiry>>
+
+| 112
+| WARNING
+| Minimum TTL out of range
+| <<req:soa-negttl>>
+
+| 113
+| WARNING
+| Primary Master (MNAME) inconsistent across SOA records
+| <<req:prime-ns-consistency>>
+
+| 115
+| ERROR
+| SOA record response must be direct
+| <<req:none-cname-rr>>
+
+| 116
+| ERROR
+| SOA record response must be authoritative
+| <<req:authoritative-ns-only>>
+
+| 118
+| ERROR
+| Inconsistent set of NS RRs
+| <<req:ns-rrset-consistency>>
+
+| 120
+| WARNING
+| Recursive queries should not be allowed
+| <<req:recursive-queries>>
+
+| 125
+| ERROR
+| Insufficient diversity of nameserver' s IPv4 addresses
+| <<req:connectivity>>
+
+| 127
+| ERROR
+| Insufficient number of nameservers reachable
+| <<req:connectivity>>
+
+| 129
+| ERROR
+| Invalid IPv4 or IPv6 address
+| <<req:connectivity>>
+
+| 130
+| ERROR
+| IPv6 address is not allocated
+| <<req:ipv6>>
+
+| 131
+| ERROR
+| IPv6 address is not routable
+| <<req:ipv6>>
+
+| 132
+| ERROR
+| Could not resolve any IP address for this nameserver
+| <<req:connectivity>>
+
+| 200
+| ERROR
+| DNSKEY RR ZONE flag (bit 7) must be set
+| <<req:dnskey-flags-zone-bit>>
+
+| 201
+| ERROR
+| DNSKEY RR REVOKE flag (bit 8) must not be set
+| <<req:dnskey-flags-revoke-bit>>
+
+| 202
+| WARNING
+| DNSKEY RR SEP flag (bit 15) should be set
+| <<req:dnskey-flags-sep-bit>>
+
+| 203
+| ERROR
+| DNSKEY RR RSA key modulus length in bits out of range
+| <<req:dnskey-alg-rsa-modulos>>
+
+| 204
+| ERROR
+| DNSKEY RR RSA public key exponent length in bits must not exceed 128 bits
+| <<req:dnskey-alg-rsa-exponent>>
+
+| 205
+| ERROR
+| DNSKEY RR DSA public key parameter T out of range
+| <<req:dnskey-alg-dsa-t>>
+
+| 206
+| ERROR
+| DNSKEY RR DSA public key has invalid size
+| <<req:dnskey-alg-dsa-length>>
+
+| 207
+| ERROR
+| DNSKEY RR public key must be base64 encoded
+| <<req:dnskey>>
+
+| 208
+| ERROR
+| Duplicate DNSKEY RR
+| <<req:dnskey-parameters>>
+
+| 210
+| ERROR
+| Max 5 DNSKEY RR allowed
+| <<req:dnskey-parameters>>
+
+| 211
+| ERROR
+| Inconsistent DNSKEY RR in nameserver response
+| <<req:dnskey-rrset-status>>
+
+| 212
+| WARNING
+| Did not find DNSKEY RR from request in all nameserver responses
+| <<req:dnskey-rrset-visibility>>
+
+| 213
+| ERROR
+| Did not find any DNSKEY RR from request in all nameserver responses
+| <<req:dnskey-rrset-visibility>>
+
+| 214
+| WARNING
+| Querying some authoritative nameservers via EDNS0 UDP yields truncation because of not supporting sufficient packet size
+| <<req:dnssec-cross-udp>>
+
+| 215 
+| ERROR
+| Timeout after switching from UDP to TCP - switch to TCP due to truncation
+| <<req:dnssec-cross-rrset>>
+
+| 216 
+| ERROR
+| No visible DNSKEY found signing the DNSKEY RR obtained in response
+| <<req:dnssec-proof-of-possession>>
+
+| 217
+| ERROR
+| No visible DNSKEY found in signing directly or indirectly the SOA RR obtained in response
+| <<req:dnssec-chain-of-trust>>
+
+| 218
+| ERROR
+| Received invalid answer to a DO-Bit query
+| <<req:dnssec-cross-edns0>>
+
+| 219
+| ERROR
+| Unable to retrieve DNSKEY RR with TCP or EDNS0
+| <<req:dnssec-cross-rrset>>
+
+| 220
+| ERROR
+| DNSKEY RR has invalid algorithm
+| <<req:dnskey-algo>>
+
+| 221
+| ERROR
+| Unknown flags in DNSKEY RR are set
+| <<req:dnskey-flags-values>>
+
+| 222
+| ERROR
+| Querying some authoritative nameservers via EDNS0 UDP yields timeout
+| <<req:dnssec-cross-udp>>
+
+| 223 
+| ERROR
+| Timeout after switching from UDP to TCP - switch to TCP due to timeout
+| <<req:dnssec-cross-rrset>>
+
+| 224
+| WARNING
+| Querying some authoritative nameservers via EDNS0 UDP yields unreachable
+| <<req:dnssec-cross-udp>>
+
+| 225
+| ERROR
+| Timeout after switching from UDP to TCP
+| <<req:dnssec-cross-rrset>>
+
+| 226 
+| ERROR
+| DNSKEY RR ECDSA public key has invalid size
+| <<req:dnskey-alg-ecdsa>>
+
+| 227 
+| ERROR
+| DNSKEY RR GOST public key has invalid size
+| <<req:dnskey-alg-gost>>
+
+| 228
+| ERROR
+| DNSKEY RR ED public key has invalid size
+| <<req:dnskey-alg-eddsa>>
+
+| 901
+| ERROR
+| Unexpected RCODE
+| 
+
+| 902
+| ERROR
+| Timeout 
+| <<req:tcp-reachability>>
+
+| 903
+| ERROR
+| Timeout with recursive resolver
+|
+
+| 904
+| ERROR
+| Port unreachable
+| 
+
+| 908
+| ERROR
+| TCP connection refused
+| <<req:tcp-reachability>>
+
+| 999
+| WARNING
+| Unexpected exception
+| 
+|===

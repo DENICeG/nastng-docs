@@ -1,0 +1,5 @@
+210 - Max 5 DNSKEY RR allowed
+207 - DNSKEY RR public key must be base64 encoded
+214 - Querying some authoritative nameservers via EDNS0 UDP causes truncation because of not supporting sufficient packet size.
+222
+224
