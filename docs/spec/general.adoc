@@ -338,7 +338,7 @@ address scope, allocated and routable. Any violation results in the correspondin
 **Further explanation:**
 IPv6 is restricted to different address scopes. In order to ensure common reachability
 of any namserver via IPv6 just global scoped addresses are accepted.
-
+Result Codes
 [[req:recursive-queries,Recursive Queries not Allowed]]
 ===== Recursive Queries not Allowed
 The execution of recursive DNS queries **SHOULD** be not allowed. Otherwise **WARNING**.

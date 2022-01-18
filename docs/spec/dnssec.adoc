@@ -50,8 +50,7 @@ Nevertheless, any key used for DNSSEC related zone signing must be covered withi
 === DNSKEY RR Visibility
 
 The notion visible DNSKEY RR is defined as follows:
-Any given DNSKEY RR of check request that is covered by the DNSKEY RRSet of the delegated zone
-is visible.
+A DNSKEY-RR given in the check request is visible if it is included in the DNSKEY-RRSet of the delegated zone.
 
 === Validation Concept
 
@@ -427,13 +426,13 @@ package size and connectivity. Otherwise a corresponding **WARNING** is returned
 |Code |Message
 
 | 214
-| Querying some authoritative nameservers via EDNS0 UDP yields truncation because of not supporting sufficient packet size. 
+| Querying some authoritative nameservers via EDNS0 UDP causes truncation because of not supporting sufficient packet size. 
 
 | 222
-| Querying some authoritative nameservers via EDNS0 UDP yields timeout
+| Querying some authoritative nameservers via EDNS0 UDP causes timeout
 
 | 224
-| Querying some authoritative nameservers via EDNS0 UDP yields unreachable
+| Querying some authoritative nameservers via EDNS0 UDP causes unreachable
 |===
 
 [[req:dnssec-cross-rrset,Availability of DNSKEY RRSet]]

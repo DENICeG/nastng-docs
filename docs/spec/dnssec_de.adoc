@@ -169,14 +169,14 @@ als möglicher Wert gewählt werden. Alle anderen Werte implizieren einen **ERRO
 |Code |Message
 
 | 221
-| Unknown flags in DNSKEY RR are set
+| Unknown flags in DNSKEY RR are setA DNSKEY-RR given in the check request is visible if it is included in the DNSKEY-RRSet of the delegated zone
 |===
 
 ==== DNSKEY: Protocol
 
 Das Feld Protocol **MUSS** den Wert "3" haben. Dieser Wert ist in https://www.ietf.org/rfc/rfc2308.txt[RFC4034]
 zwingend vorgeschrieben und wird somit statisch angenommen. Es erfolgt daher weder eine **WARNING** noch ein **ERROR**
-bei Verstoß.
+bei Verstoß, wenn dieser Wert nicht gesetzt ist.
 
 [[req:dnskey-algo,DNSKEY: Algorithm]]
 ==== DNSKEY: Algorithm
@@ -451,13 +451,13 @@ Paketgröße und Verfügbarkeit unterstützen. Andernfalls erfolgt die Ausgabe e
 |Code |Message
 
 | 214
-| Querying some authoritative nameservers via EDNS0 UDP yields truncation because of not supporting sufficient packet size. 
+| Querying some authoritative nameservers via EDNS0 UDP causes truncation because of not supporting sufficient packet size. 
 
 | 222
-| Querying some authoritative nameservers via EDNS0 UDP yields timeout
+| Querying some authoritative nameservers via EDNS0 UDP causes timeout
 
 | 224
-| Querying some authoritative nameservers via EDNS0 UDP yields unreachable
+| Querying some authoritative nameservers via EDNS0 UDP causes unreachable
 |===
 
 [[req:dnssec-cross-rrset,Verfügbarkeit des DNSKEY-RRSet]]
